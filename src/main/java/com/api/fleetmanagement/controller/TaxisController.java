@@ -20,7 +20,7 @@ public class TaxisController {
     @Autowired
     TaxisRepository taxisRepository;
 
-    @Operation(summary = "Get all taxis")
+    @Operation(summary = "Get all taxis from database")
     @GetMapping("/taxis")
     public ResponseEntity<Page<TaxisModel>> getAllTaxis(Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(taxisRepository.findAll(pageable));
