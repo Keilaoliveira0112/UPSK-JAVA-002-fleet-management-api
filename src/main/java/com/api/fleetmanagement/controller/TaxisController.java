@@ -1,7 +1,9 @@
 package com.api.fleetmanagement.controller;
 
 import com.api.fleetmanagement.models.TaxisModel;
+import com.api.fleetmanagement.models.TrajectoriesModel;
 import com.api.fleetmanagement.repository.TaxisRepository;
+import com.api.fleetmanagement.repository.TrajectoriesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -18,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -26,6 +29,9 @@ public class TaxisController {
 
     @Autowired
     TaxisRepository taxisRepository;
+
+    @Autowired
+    TrajectoriesRepository trajectoriesRepository;
 
 
     @Operation(summary = "Get all taxis from database")
@@ -51,12 +57,29 @@ public class TaxisController {
                     content = @Content) })
 
 
+   // @GetMapping("/taxis/{id}")
+    //public ResponseEntity<TaxisModel> getTaxiById(@PathVariable Integer id) {
+   //     Optional<TaxisModel> taxi = taxisRepository.findById(id);
+
+    //    return taxi.map(taxisModel -> ResponseEntity.status(HttpStatus.OK).body(taxisModel)).orElseGet(()
+    //            -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+   // }
+
     @GetMapping("/taxis/{id}")
     public ResponseEntity<TaxisModel> getTaxiById(@PathVariable Integer id) {
         Optional<TaxisModel> taxi = taxisRepository.findById(id);
 
-        return taxi.map(taxisModel -> ResponseEntity.status(HttpStatus.OK).body(taxisModel)).orElseGet(()
-                -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+        if (taxi.isPresent()) {
+            List<TrajectoriesModel> trajectoryInfoList = trajectoriesRepository.findTrajectoriesByTaxiId(id);
+
+            List<TrajectoriesModel> trajectories = trajectoryInfoList.stream().toList();
+
+            TaxisModel taxiModel = taxi.get();
+
+            return ResponseEntity.status(HttpStatus.OK).body(taxiModel);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
 }
