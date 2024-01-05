@@ -57,26 +57,20 @@ public class TaxisController {
                     content = @Content) })
 
 
-   // @GetMapping("/taxis/{id}")
-    //public ResponseEntity<TaxisModel> getTaxiById(@PathVariable Integer id) {
-   //     Optional<TaxisModel> taxi = taxisRepository.findById(id);
 
-    //    return taxi.map(taxisModel -> ResponseEntity.status(HttpStatus.OK).body(taxisModel)).orElseGet(()
-    //            -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
-   // }
 
     @GetMapping("/taxis/{id}")
-    public ResponseEntity<TaxisModel> getTaxiById(@PathVariable Integer id) {
+    public ResponseEntity<List<TrajectoriesModel>> getTaxiById(@PathVariable Integer id) {
         Optional<TaxisModel> taxi = taxisRepository.findById(id);
 
         if (taxi.isPresent()) {
-            List<TrajectoriesModel> trajectoryInfoList = trajectoriesRepository.findTrajectoriesByTaxiId(id);
+            List<TrajectoriesModel> trajectoryInfoList = trajectoriesRepository.findTrajectoriesByTaxiId(Integer.toString(id));
 
             List<TrajectoriesModel> trajectories = trajectoryInfoList.stream().toList();
 
             TaxisModel taxiModel = taxi.get();
 
-            return ResponseEntity.status(HttpStatus.OK).body(taxiModel);
+            return ResponseEntity.status(HttpStatus.OK).body(trajectoryInfoList);
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
