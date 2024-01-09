@@ -60,11 +60,11 @@ public class TaxisController {
 
 
     @GetMapping("/taxis/{id}")
-    public ResponseEntity<List<TrajectoriesModel>> getTaxiById(@PathVariable Integer id) {
+    public ResponseEntity<List<TrajectoriesModel>> getTaxiById(@PathVariable Integer id, Pageable pageable) {
         Optional<TaxisModel> taxi = taxisRepository.findById(id);
 
         if (taxi.isPresent()) {
-            List<TrajectoriesModel> trajectoryInfoList = trajectoriesRepository.findTrajectoriesByTaxiId(Integer.toString(id));
+            List<TrajectoriesModel> trajectoryInfoList = trajectoriesRepository.findTrajectoriesByTaxiId(Integer.toString(id), pageable);
 
             List<TrajectoriesModel> trajectories = trajectoryInfoList.stream().toList();
 
