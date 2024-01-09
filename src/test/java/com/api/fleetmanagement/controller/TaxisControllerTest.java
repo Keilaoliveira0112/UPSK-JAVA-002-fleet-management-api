@@ -1,7 +1,9 @@
 package com.api.fleetmanagement.controller;
 
 import com.api.fleetmanagement.models.TaxisModel;
+import com.api.fleetmanagement.models.TrajectoriesModel;
 import com.api.fleetmanagement.repository.TaxisRepository;
+import com.api.fleetmanagement.repository.TrajectoriesRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -15,14 +17,16 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.mockito.ArgumentMatchers;
 
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -34,11 +38,14 @@ public class TaxisControllerTest {
     @MockBean
     private TaxisRepository taxisRepository;
 
+    @MockBean
+    private TrajectoriesRepository trajectoriesRepository;
+
     @Test
     void getAllTaxis() throws Exception {
         TaxisModel taxis = new TaxisModel();
         taxis.setPlate("CNCJ-2997");
-        taxis.setId(7249);
+        taxis.setId(String.valueOf(7249));
 
         Page<TaxisModel> page = new PageImpl<>(List.of(taxis));
 
@@ -48,9 +55,41 @@ public class TaxisControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().json("{'content':[{'id':7249,'plate':'CNCJ-2997'}]," +
-                "'pageable':'INSTANCE','last':true,'totalPages':1,'totalElements':1,'first':true," +
-                "'size':1,'number':0,'sort':{'sorted':false,'empty':true,'unsorted':true},'numberOfElements':1," +
-                "'empty':false}"));
+                        "'pageable':'INSTANCE','last':true,'totalPages':1,'totalElements':1,'first':true," +
+                        "'size':1,'number':0,'sort':{'sorted':false,'empty':true,'unsorted':true},'numberOfElements':1," +
+                        "'empty':false}"));
 
     }
+
+  @Test
+    void getTaxiById_ExistingTaxi() throws Exception {
+        TaxisModel taxi = new TaxisModel();
+        taxi.setId(7249);
+        taxi.setPlate("CNCJ-2997");
+
+        TrajectoriesModel trajectory = new TrajectoriesModel();
+        trajectory.setId(1);
+        trajectory.setTaxi(taxi);
+        trajectory.setDate(LocalDateTime.parse("2008-02-02T13:40:08"));
+        trajectory.setLatitude(116.29118);
+        trajectory.setLongitude(39.88652);
+
+        List<TrajectoriesModel> trajectoryList = List.of(trajectory);
+        Page<TrajectoriesModel> page = new PageImpl<>(trajectoryList);
+
+        Mockito.when(taxisRepository.findById(7249)).thenReturn(Optional.of(taxi));
+        Mockito.when(trajectoriesRepository.findTrajectoriesByTaxiId(String.valueOf(ArgumentMatchers.eq(7249)), ArgumentMatchers.any(Pageable.class))).thenReturn((List<TrajectoriesModel>) page);
+
+        this.mockMvc.perform(get("/taxis/7249"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+               .andExpect(jsonPath("$[0].taxi.id").value(7249))
+                .andExpect(jsonPath("$[0].taxi.plate").value("CNCJ-2997"))
+                .andExpect(jsonPath("$[0].date").value("2008-02-02T13:40:08"))
+                .andExpect(jsonPath("$[0].latitude").value(116.29118))
+               .andExpect(jsonPath("$[0].longitude").value(39.88652));
+    }
+
+
 }
