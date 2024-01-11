@@ -46,29 +46,22 @@ public class TaxisController {
     }
 
 
-    @Operation(summary = "Get a taxis by id")
+    @Operation(summary = "Get all trajectories by taxi id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Found the taxi",
                     content = { @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = TaxisModel.class)) }),
+                            schema = @Schema(implementation = TrajectoriesModel.class)) }),
             @ApiResponse(responseCode = "400", description = "Invalid id supplied",
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "Taxi not found",
                     content = @Content) })
 
-
-
-
     @GetMapping("/taxis/{id}")
-    public ResponseEntity<List<TrajectoriesModel>> getTaxiById(@PathVariable Integer id, Pageable pageable) {
+    public ResponseEntity<Page<TrajectoriesModel>> getTaxiById(@PathVariable Integer id, Pageable pageable) {
         Optional<TaxisModel> taxi = taxisRepository.findById(id);
 
         if (taxi.isPresent()) {
-            List<TrajectoriesModel> trajectoryInfoList = trajectoriesRepository.findTrajectoriesByTaxiId(Integer.toString(id), pageable);
-
-            List<TrajectoriesModel> trajectories = trajectoryInfoList.stream().toList();
-
-            TaxisModel taxiModel = taxi.get();
+            Page<TrajectoriesModel> trajectoryInfoList = trajectoriesRepository.findTrajectoriesByTaxiId(Integer.toString(id), pageable);
 
             return ResponseEntity.status(HttpStatus.OK).body(trajectoryInfoList);
         } else {

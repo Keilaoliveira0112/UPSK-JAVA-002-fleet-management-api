@@ -4,6 +4,8 @@ import com.api.fleetmanagement.models.TaxisModel;
 import com.api.fleetmanagement.models.TrajectoriesModel;
 import com.api.fleetmanagement.repository.TaxisRepository;
 import com.api.fleetmanagement.repository.TrajectoriesRepository;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
@@ -54,7 +56,7 @@ public class TaxisControllerTest {
         this.mockMvc.perform(get("/taxis"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(content().json("{'content':[{'id':7249,'plate':'CNCJ-2997'}]," +
+                .andExpect(content().json("{'content':[{'id':'7249','plate':'CNCJ-2997'}]," +
                         "'pageable':'INSTANCE','last':true,'totalPages':1,'totalElements':1,'first':true," +
                         "'size':1,'number':0,'sort':{'sorted':false,'empty':true,'unsorted':true},'numberOfElements':1," +
                         "'empty':false}"));
@@ -62,9 +64,10 @@ public class TaxisControllerTest {
     }
 
   @Test
+  @DisplayName("Deve retornar ok e as trajetórias de um taxi")
     void getTaxiById_ExistingTaxi() throws Exception {
         TaxisModel taxi = new TaxisModel();
-        taxi.setId(7249);
+        taxi.setId(String.valueOf(7249));
         taxi.setPlate("CNCJ-2997");
 
         TrajectoriesModel trajectory = new TrajectoriesModel();
@@ -78,18 +81,43 @@ public class TaxisControllerTest {
         Page<TrajectoriesModel> page = new PageImpl<>(trajectoryList);
 
         Mockito.when(taxisRepository.findById(7249)).thenReturn(Optional.of(taxi));
-        Mockito.when(trajectoriesRepository.findTrajectoriesByTaxiId(String.valueOf(ArgumentMatchers.eq(7249)), ArgumentMatchers.any(Pageable.class))).thenReturn((List<TrajectoriesModel>) page);
+        Mockito.when(trajectoriesRepository.findTrajectoriesByTaxiId(ArgumentMatchers.any(), ArgumentMatchers.any(Pageable.class))).thenReturn(page);
 
         this.mockMvc.perform(get("/taxis/7249"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-               .andExpect(jsonPath("$[0].taxi.id").value(7249))
-                .andExpect(jsonPath("$[0].taxi.plate").value("CNCJ-2997"))
-                .andExpect(jsonPath("$[0].date").value("2008-02-02T13:40:08"))
-                .andExpect(jsonPath("$[0].latitude").value(116.29118))
-               .andExpect(jsonPath("$[0].longitude").value(39.88652));
+                .andExpect(jsonPath("$.content[0].id", Matchers.is(1)))
+
+                .andExpect(jsonPath("$.content[0].date").value("2008-02-02T13:40:08"))
+                .andExpect(jsonPath("$.content[0].latitude").value(116.29118))
+               .andExpect(jsonPath("$.content[0].longitude").value(39.88652))
+                .andExpect((jsonPath("$.totalElements").value(1)));
+
     }
 
+    @Test
+    @DisplayName("Deve retornar erro Not Found por que taxi não existe")
+    void getTaxiById_NoExistingTaxi() throws Exception {
+
+
+        Mockito.when(taxisRepository.findById(7249)).thenReturn(Optional.empty());
+        this.mockMvc.perform(get("/taxis/7249"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+
+    }
+
+
+    @Test
+    @DisplayName("Deve retornar error 400 porque id inválido")
+    void getTaxiById_ErrorTaxiId() throws Exception {
+
+
+
+        this.mockMvc.perform(get("/taxis/loc3"))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+    }
 
 }
