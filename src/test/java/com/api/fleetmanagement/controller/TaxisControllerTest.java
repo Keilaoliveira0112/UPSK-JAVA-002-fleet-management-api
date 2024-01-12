@@ -120,4 +120,32 @@ public class TaxisControllerTest {
 
     }
 
+    @Test
+    @DisplayName("Deve retornar a última localização de taxi")
+    void getTaxiLastLocations() throws Exception {
+        TaxisModel taxi = new TaxisModel();
+        taxi.setId(String.valueOf(2623));
+        taxi.setPlate("CNCJ-2997");
+
+        TrajectoriesModel trajectory = new TrajectoriesModel();
+        trajectory.setId(11732);
+        trajectory.setTaxi(taxi);
+        trajectory.setDate(LocalDateTime.parse("2008-02-08T17:36:33"));
+        trajectory.setLatitude(116.291);
+        trajectory.setLongitude(39.88672);
+
+        Page<TrajectoriesModel> page = new PageImpl<>(List.of(trajectory));
+
+        Mockito.when(trajectoriesRepository.findLastLocations(ArgumentMatchers.any(Pageable.class))).thenReturn(page);
+
+        this.mockMvc.perform(get("/taxis/last-locations"))
+
+
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id", Matchers.is(1)))
+                .andExpect(jsonPath("$.content[0].date", Matchers.is("2008-02-08T17:36:33")));
+
+    }
+
 }
