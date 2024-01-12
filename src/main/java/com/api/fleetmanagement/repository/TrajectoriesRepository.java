@@ -16,7 +16,7 @@ public interface TrajectoriesRepository extends JpaRepository<TrajectoriesModel,
     @Query(value = "FROM TrajectoriesModel t WHERE t.taxi.id = :taxiId")
     Page<TrajectoriesModel> findTrajectoriesByTaxiId(@Param("taxiId") String taxiId, Pageable pageable);
 
-    @Query("SELECT t FROM TrajectoriesModel t " + "JOIN FETCH t.taxi tr " + "WHERE t.id IN (SELECT MAX(tt.id) " +
+    @Query("SELECT t FROM TrajectoriesModel t " + "JOIN t.taxi tr " + "WHERE t.id IN (SELECT MAX(tt.id) " +
             "FROM TrajectoriesModel tt GROUP BY tt.taxi) " + "ORDER BY t.date DESC")
     Page<TrajectoriesModel> findLastLocations(Pageable pageable);
 }
